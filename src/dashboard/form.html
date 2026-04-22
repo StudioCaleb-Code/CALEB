@@ -1,0 +1,52 @@
+<link rel="stylesheet" href="/css/form.css">
+<div class="container-flex">
+    <div class="form-card">
+        <h2 class="form-title" id="form-title">
+            <i class="bi bi-plus-circle"></i> Videojuego
+        </h2>
+        <form id="game-form">
+            <input type="hidden" id="game-id">
+
+            <div class="input-group">
+                <label>Nombre del Juego</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-diagram-2"></i>
+                    <input type="text" id="name" required placeholder="Ej: Zelda BOTW">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Género</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-controller"></i>
+                    <input type="text" id="genero" required placeholder="Ej: Aventura">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Año de Lanzamiento</label>
+                <div class="input-wrapper">
+                    <i class="bi bi-calendar3"></i>
+                    <input type="number" id="anio" required placeholder="2024">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-save" id="btn-submit">Guardar Registro</button>
+        </form>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Género</th>
+                    <th>Año</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody id="game-table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
