@@ -13,10 +13,11 @@ app.use(express.static(path.join(__dirname, 'src', 'assets')));
 
 // --- 3. CONEXIÓN MYSQL (POOL) ---
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'clases_node',
+    host: process.env.MYSQLHOST || 'mysql.railway.internal',
+    user: process.env.MYSQLUSER || 'root',
+    password: process.env.MYSQLPASSWORD || 'TogaSJjEcQCZiLosMDSrJeEbqzRXzgKu',
+    database: process.env.MYSQLDATABASE || 'railway',
+    port: process.env.MYSQLPORT || 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
@@ -135,8 +136,8 @@ app.delete('/api/videojuegos/:id', (req, res) => {
 });
 
 // --- 7. SERVIDOR ---
-const PORT = 3000;
+const PORT = process.env.PORT || 3306;
 
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
