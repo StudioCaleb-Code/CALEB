@@ -8,6 +8,9 @@
     <!-- <link rel="stylesheet" href="../assets/css/admin.css"> -->
     <link rel="stylesheet" href="/css/admin.css">
     <link rel="stylesheet" href="/css/form.css">
+    <link rel="stylesheet" href="/css/listado.css">
+    <link rel="stylesheet" href="/css/json.css">
+    <link rel="stylesheet" href="/css/estudiante.css">
 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
 </head>
@@ -23,19 +26,19 @@
                 <li class="menu-listado">
                     <a href="/form" class="menu-link">
                         <i class="bi bi-plug"></i>
-                        <span>Setting</span>
+                        <span>Listdo</span>
                     </a>
                 </li>
                 <li class="menu-listado">
                     <a href="/json" class="menu-link">
                         <i class="bi bi-braces"></i>
-                        <span>Json</span>
+                        <span>Datos en Json</span>
                     </a>
                 </li>
                 <li class="menu-listado">
-                    <a href="/json" class="menu-link">
-                        <i class="bi bi-terminal"></i>
-                        <span>Console</span>
+                    <a href="/estudiante" class="menu-link">
+                        <i class="bi bi-person-workspace"></i>
+                        <span>Estudiante</span>
                     </a>
                 </li>
             </ul>
@@ -46,18 +49,19 @@
         <button class="menu-toggle">
             <i class="bi bi-list"></i>
         </button>
-
-        <button class="console-win">
-            <i class="bi bi-terminal"></i>
-        </button>
+        <h2>Node.js</h2>
     </header>
 
     <main class="main">
-
     </main>
+    <div id="modal-overlay" class="modal-overlay">
+        <div id="modal-content" class="modal-content"></div>
+    </div>
     <!-- <script src="../assets/js/admin.js"></script> -->
     <script src="/js/admin.js"></script>
     <script src="/js/form.js"></script>
+    <script src="/js/json.js"></script>
+    <script src="/js/listado.js"></script>
 
 </body>
 

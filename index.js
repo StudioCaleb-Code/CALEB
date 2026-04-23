@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const mysql = require('mysql2');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 
@@ -11,21 +11,19 @@ app.use(express.urlencoded({ extended: true }));
 // --- 2. ARCHIVOS ESTÁTICOS ---
 app.use(express.static(path.join(__dirname, 'src', 'assets')));
 
-// --- 3. CONEXIÓN MYSQL (POOL) ---
-const db = mysql.createPool({
-    host: process.env.MYSQLHOST || 'mysql.railway.internal',
-    user: process.env.MYSQLUSER || 'root',
-    password: process.env.MYSQLPASSWORD || 'TogaSJjEcQCZiLosMDSrJeEbqzRXzgKu',
-    database: process.env.MYSQLDATABASE || 'railway',
-    port: process.env.MYSQLPORT || 3306,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
+// --- 3. SUPABASE ---
+const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://tqjoaltfbzicbqjfomfk.supabase.co',
+    process.env.SUPABASE_KEY || 'sb_publishable_hhFREJKTApyObsBT1HPRXg_iizVxL9N'
+);
 
-console.log('✅ MySQL conectado con pool');
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+    console.warn('⚠️ Variables de entorno de Supabase no configuradas');
+} else {
+    console.log('✅ Supabase conectado');
+}
 
-// --- 4. RUTAS HTML (SPA ENTRY) ---
+// --- 4. RUTAS HTML ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'src', 'dashboard', 'admin.html'));
 });
@@ -34,110 +32,138 @@ app.get('/form', (req, res) => {
     res.sendFile(path.join(__dirname, 'src', 'dashboard', 'form.html'));
 });
 
-// --- 5. JSON PURO (TU MENÚ /json) ---
+app.get('/listado', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src', 'dashboard', 'listado.html'));
+});
+app.get('/estudiante', (req, res) => {
+    res.sendFile(path.join(__dirname, 'src', 'dashboard', 'estudiante.html'));
+});
 app.get('/json', (req, res) => {
-    const query = 'SELECT * FROM videojuegos ORDER BY id DESC';
-
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error('Error JSON:', err);
-            return res.status(500).json({ error: 'Error al obtener datos' });
-        }
-
-        res.json(results);
-    });
+    res.sendFile(path.join(__dirname, 'src', 'dashboard', 'json.html'));
 });
 
-// --- 6. API CRUD ---
+// --- 5. API CRUD SUPABASE ---
 
 // 🔹 LISTAR
-app.get('/api/videojuegos', (req, res) => {
-    const query = 'SELECT * FROM videojuegos ORDER BY id DESC';
+app.get('/api/proveedor', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('proveedor')
+            .select('*')
+            .order('id_proveedor', { ascending: false });
 
-    db.query(query, (err, results) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error al obtener datos' });
+        if (error) throw error;
+
+        res.json(data);
+    } catch (err) {
+        console.error('Error LISTAR:', err);
+        res.status(500).json({ error: 'Error al obtener datos' });
+    }
+});
+
+// 🔹 OBTENER UNO
+app.get('/api/proveedor/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { data, error } = await supabase
+            .from('proveedor')
+            .select('*')
+            .eq('id_proveedor', id)
+            .single();
+
+        if (error || !data) {
+            return res.status(404).json({ error: 'Proveedor no encontrado' });
         }
-        res.json(results);
-    });
+
+        res.json(data);
+    } catch (err) {
+        console.error('Error OBTENER:', err);
+        res.status(500).json({ error: 'Error interno' });
+    }
 });
 
 // 🔹 CREAR
-app.post('/api/videojuegos', (req, res) => {
-    let { nombre, genero, anio } = req.body;
+app.post('/api/proveedor', async (req, res) => {
+    try {
+        const { nombre, descripcion } = req.body;
 
-    if (!nombre || !genero || !anio) {
-        return res.status(400).json({ error: 'Campos incompletos' });
-    }
-
-    anio = parseInt(anio);
-
-    const query = 'INSERT INTO videojuegos (nombre, genero, anio) VALUES (?, ?, ?)';
-
-    db.query(query, [nombre, genero, anio], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error al insertar' });
+        if (!nombre || !descripcion) {
+            return res.status(400).json({ error: 'Campos incompletos' });
         }
 
+        const { data, error } = await supabase
+            .from('proveedor')
+            .insert([{ nombre, descripcion }])
+            .select();
+
+        if (error) throw error;
+
         res.status(201).json({
-            mensaje: 'Juego creado',
-            id: result.insertId
+            mensaje: 'Proveedor creado',
+            data
         });
-    });
+    } catch (err) {
+        console.error('Error CREAR:', err);
+        res.status(500).json({ error: 'Error al insertar' });
+    }
 });
 
 // 🔹 EDITAR
-app.put('/api/videojuegos/:id', (req, res) => {
-    const { id } = req.params;
-    let { nombre, genero, anio } = req.body;
+app.put('/api/proveedor/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, descripcion } = req.body;
 
-    if (!nombre || !genero || !anio) {
-        return res.status(400).json({ error: 'Campos incompletos' });
+        if (!nombre || !descripcion) {
+            return res.status(400).json({ error: 'Campos incompletos' });
+        }
+
+        const { data, error } = await supabase
+            .from('proveedor')
+            .update({ nombre, descripcion })
+            .eq('id_proveedor', id)
+            .select();
+
+        if (error) throw error;
+
+        res.json({
+            mensaje: 'Actualizado correctamente',
+            data
+        });
+    } catch (err) {
+        console.error('Error EDITAR:', err);
+        res.status(500).json({ error: 'Error al actualizar' });
     }
-
-    anio = parseInt(anio);
-
-    const query = `
-        UPDATE videojuegos 
-        SET nombre = ?, genero = ?, anio = ?
-        WHERE id = ?
-    `;
-
-    db.query(query, [nombre, genero, anio, id], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error al actualizar' });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Juego no encontrado' });
-        }
-
-        res.json({ mensaje: 'Actualizado correctamente' });
-    });
 });
 
 // 🔹 ELIMINAR
-app.delete('/api/videojuegos/:id', (req, res) => {
-    const { id } = req.params;
+app.delete('/api/proveedor/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
 
-    const query = 'DELETE FROM videojuegos WHERE id = ?';
+        const { error } = await supabase
+            .from('proveedor')
+            .delete()
+            .eq('id_proveedor', id);
 
-    db.query(query, [id], (err, result) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error al eliminar' });
-        }
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Juego no encontrado' });
-        }
+        if (error) throw error;
 
         res.json({ mensaje: 'Eliminado correctamente' });
-    });
+    } catch (err) {
+        console.error('Error ELIMINAR:', err);
+        res.status(500).json({ error: 'Error al eliminar' });
+    }
+});
+
+// --- 6. FALLBACK (IMPORTANTE PARA SPA) ---
+app.use((req, res) => {
+    res.sendFile(path.join(__dirname, 'src', 'dashboard', 'admin.html'));
 });
 
 // --- 7. SERVIDOR ---
-const PORT = process.env.PORT || 3306;
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto ${PORT}`);
+    console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
 });

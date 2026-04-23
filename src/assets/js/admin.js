@@ -5,12 +5,40 @@ document.addEventListener("DOMContentLoaded", () => {
     const menuLinks = document.querySelectorAll(".menu-link");
     const mainContainer = document.querySelector(".main");
 
-    // --- 1. SIDEBAR ---
-    menuToggle?.addEventListener("click", () => {
-        sidebar.classList.toggle("active");
+    // --- FUNCIONES ---
+    const abrirMenu = () => {
+        sidebar.classList.add("active");
+        document.body.classList.add("menu-open");
+    };
+
+    const cerrarMenu = () => {
+        sidebar.classList.remove("active");
+        document.body.classList.remove("menu-open");
+    };
+
+    // --- 1. TOGGLE SIDEBAR ---
+    menuToggle?.addEventListener("click", (e) => {
+        e.stopPropagation();
+
+        if (sidebar.classList.contains("active")) {
+            cerrarMenu();
+        } else {
+            abrirMenu();
+        }
     });
 
-    // --- 2. CARGAR VISTAS (SPA) ---
+    // --- 2. CERRAR AL HACER CLICK AFUERA ---
+    document.addEventListener("click", (e) => {
+        if (
+            sidebar.classList.contains("active") &&
+            !sidebar.contains(e.target) &&
+            !menuToggle.contains(e.target)
+        ) {
+            cerrarMenu();
+        }
+    });
+
+    // --- 3. CARGAR VISTAS (SPA) ---
     const cargarVista = async (url) => {
         try {
             const response = await fetch(url);
@@ -23,9 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
             mainContainer.innerHTML = html;
 
-            // 🔥 Re-ejecutar scripts dinámicos
+            // 🔥 re-ejecutar scripts dinámicos
             setTimeout(() => {
                 window.initForm?.();
+                window.initListado?.();
             }, 0);
 
         } catch (error) {
@@ -33,35 +62,29 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     };
 
-    // --- 3. RESTAURAR VISTA ---
+    // --- 4. RESTAURAR VISTA ---
     const currentActive = localStorage.getItem("menuSeleccionado");
 
-    if (currentActive && currentActive !== '/json') {
+    if (currentActive) {
         menuLinks.forEach(link => {
             if (link.getAttribute("href") === currentActive) {
                 link.classList.add("active");
-                cargarVista(currentActive);
+
+                // 🔥 SETTING ahora carga listado
+                if (currentActive === '/form') {
+                    cargarVista('/listado');
+                } else {
+                    cargarVista(currentActive);
+                }
             }
         });
     }
 
-    // --- 4. CLICK MENÚ ---
+    // --- 5. CLICK MENÚ ---
     menuLinks.forEach(link => {
         link.addEventListener("click", function (e) {
 
             const href = this.getAttribute("href");
-
-            // 🔥 CASO JSON (IMPORTANTE)
-            if (href === '/json') {
-                e.preventDefault();
-
-                localStorage.setItem("menuSeleccionado", href);
-
-                // 👉 abre JSON REAL (no SPA)
-                window.location.href = '/api/videojuegos';
-
-                return;
-            }
 
             e.preventDefault();
 
@@ -70,10 +93,16 @@ document.addEventListener("DOMContentLoaded", () => {
             menuLinks.forEach(l => l.classList.remove("active"));
             this.classList.add("active");
 
-            cargarVista(href);
+            // 🔥 SETTING → listado
+            if (href === '/form') {
+                cargarVista('/listado');
+            } else {
+                cargarVista(href);
+            }
 
+            // 🔥 cerrar menú en móvil SIEMPRE
             if (window.innerWidth <= 768) {
-                sidebar.classList.remove("active");
+                cerrarMenu();
             }
         });
     });
