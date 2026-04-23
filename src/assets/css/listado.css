@@ -12,9 +12,6 @@
 .table-container {
   background: white;
   border-radius: 12px;
-
-  /* 🔥 CLAVE */
-  overflow-x: auto;
 }
 
 table {
@@ -134,7 +131,6 @@ td {
 }
 
 /* ================= RESPONSIVE ================= */
-
 @media (max-width: 768px) {
   table,
   thead,
@@ -142,7 +138,6 @@ td {
   th,
   td,
   tr {
-    display: block;
     width: 100%;
   }
 
